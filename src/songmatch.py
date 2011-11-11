@@ -9,8 +9,12 @@ def read_csv(filename):
     except csv.Error, e:
       sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
   
-print 'Dump csv\n'
-read_csv('dump.csv')
+################### Main:
+if (len(sys.argv) > 1):
+  print 'Dump csv\n'
+  read_csv(sys.argv[1])
+else:
+    print "Usage: " + sys.argv[0] + " csv_filename"
 
 print 'DONE\n'
 
