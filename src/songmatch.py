@@ -2,6 +2,7 @@ import csv
 import sys
 import time
 import re
+import sets
 
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
@@ -80,6 +81,9 @@ def build_wordlist(list_of_strings):
         res[dm_word].add(string)
       else:
         res[dm_word] = set(string)
+
+      #if (dm_word[0] != dm_word[1]) & (len(dm_word[1]) > 0):
+      #  print "'" + word + "' --> '" + dm_word[0] + " / " + dm_word[1]
   print "Maximum word length found: " + str(maxlen)
   return res
 
@@ -96,7 +100,7 @@ def search_for_song(artists, artistname, albumname, songname):
   # sort by relevance:
   scoredArtists = sorted(artistDict.iteritems(), key=lambda (k,v): (v,k))
 
-  print 'Search took ' + str(c) + ' seconds'
+  print 'Search took ' + str(time.clock() - c) + ' seconds'
 
   for art, score in scoredArtists:
     if score > 80:
@@ -104,13 +108,34 @@ def search_for_song(artists, artistname, albumname, songname):
 
   return None
 
+def search_for_song_exact(artists, artistname, albumname, songname):
+  c = time.clock()
+  artistDict = dict()
+  # score artists names:
+  for artistName, albums in artists.iteritems():
+    artistDict[artistName] = (artistname == artistName)
+    #artistDict[artistName] = fuzz.token_set_ratio(artistname, artistName)
+    #artistDict[artistName] = fuzz.token_sort_ratio(artistname, artistName)
+
+  # sort by relevance:
+  scoredArtists = sorted(artistDict.iteritems(), key=lambda (k,v): (v,k))
+
+  print 'Search took ' + str(time.clock() - c) + ' seconds'
+
+  for art, score in scoredArtists:
+    if score == True:
+      print str(score) + " ==> '" + art + "'"
+
+  return None
+
+
 def search_song_loop(songdb):
   while 1:
     artistname = raw_input("Enter artist name >  ")
     albumname = raw_input("Enter album name >  ")
     songname = raw_input("Enter song name >  ")
 
-    result = search_for_song(songdb, artistname, albumname, songname)
+    result = search_for_song_exact(songdb, artistname, albumname, songname)
 
     if result != None:
       print "found '" + result[2] + "'"
@@ -119,20 +144,47 @@ def search_song_loop(songdb):
     else:
       print "not result found\n\n"
 
-def search_words_loop(words):
+def search_words_loop(wordlist):
+  splitter = re.compile(r'([ \t])')
   while 1:
     artistname = raw_input("Enter artist name >  ")
+    #words = splitter.split(artistname)
+    words = artistname.split()
 
+    c = time.clock()
     output = set()
-    word_dm = metaphone.dm(artistname)
-    for word, source in words.iteritems():
-      if word_dm == word:
-        #output.add(source)
-        print source
-        print str(len(source))
+    for word in words:
+      if (word[0] != ' ') | (word[0] != '\t'):
+        cc = time.clock()
+        word_dm = metaphone.dm(word)
+        for aword, source in wordlist.iteritems():
+          if word_dm == aword:
+            for elem in source:
+              output.add(elem)
+        print "word '" + word + "' took " + str(time.clock() - cc) + ' seconds'
+    print '    step 1 took ' + str(time.clock() - c) + ' seconds'
 
+    artistDict = dict()
     for out in output:
-      print "found '" + out + "'"
+      ratio = fuzz.token_sort_ratio(artistname, out)
+      #if ratio >= 0:
+      artistDict[out] = ratio
+
+    print '    step 2 took ' + str(time.clock() - c) + ' seconds'
+    # sort by relevance:
+    scoredArtists = sorted(artistDict.iteritems(), key=lambda (k,v): (v,k))
+
+    #for name, score in scoredArtists:
+    #  print str(score) + " --> '" + name + "'"
+
+    c = time.clock() - c
+
+    for art, score in scoredArtists:
+      if score > 0:
+        print str(score) + " ==> '" + art + "'"
+        #print str(ratio) + " --> '" + out + "'"
+
+    print 'Search took ' + str(c) + ' seconds'
 
 ################### Main:
 def main():
