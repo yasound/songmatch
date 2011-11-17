@@ -70,7 +70,8 @@ def build_wordlist(list_of_strings):
   maxlen = 0
   splitter = re.compile(r'([ \t])')
   for string in list_of_strings:
-    words = splitter.split(string)
+    #words = splitter.split(string)
+    words = string.split()
     for word in words:
       dm_word = metaphone.dm(word)
       l = len(word)
@@ -144,43 +145,48 @@ def search_song_loop(songdb):
     else:
       print "not result found\n\n"
 
-def search_words_loop(wordlist):
+def search_words_loop(wordlist, songdb, common_words):
   splitter = re.compile(r'([ \t])')
   while 1:
     artistname = raw_input("Enter artist name >  ")
-    #words = splitter.split(artistname)
-    words = artistname.split()
-
     c = time.clock()
-    output = set()
-    for word in words:
-      if (word[0] != ' ') | (word[0] != '\t'):
-        cc = time.clock()
-        word_dm = metaphone.dm(word)
-        for aword, source in wordlist.iteritems():
-          if word_dm == aword:
-            for elem in source:
-              output.add(elem)
-        print "word '" + word + "' took " + str(time.clock() - cc) + ' seconds'
-    print '    step 1 took ' + str(time.clock() - c) + ' seconds'
 
-    artistDict = dict()
-    for out in output:
-      ratio = fuzz.token_sort_ratio(artistname, out)
-      #if ratio >= 0:
-      artistDict[out] = ratio
+    if (artistname in songdb):
+      c = time.clock() - c
+      print "Found '" + artistname + "'"
+    else:
+      #words = splitter.split(artistname)
+      words = artistname.split()
 
-    print '    step 2 took ' + str(time.clock() - c) + ' seconds'
-    # sort by relevance:
-    scoredArtists = sorted(artistDict.iteritems(), key=lambda (k,v): (v,k))
+      output = set()
+      for word in words:
+        if ((word[0] != ' ') | (word[0] != '\t')) & (word not in common_words):
+          cc = time.clock()
+          word_dm = metaphone.dm(word)
+          for aword, source in wordlist.iteritems():
+            if word_dm == aword:
+              for elem in source:
+                output.add(elem)
+          print "word '" + word + "' took " + str(time.clock() - cc) + ' seconds'
+      print '    step 1 took ' + str(time.clock() - c) + ' seconds'
+      print '    ' + str(len(output)) + ' artists left'
 
-    #for name, score in scoredArtists:
-    #  print str(score) + " --> '" + name + "'"
+      artistDict = dict()
+      for out in output:
+        ratio = fuzz.token_sort_ratio(artistname, out)
+        #if ratio >= 0:
+        artistDict[out] = ratio
 
-    c = time.clock() - c
+      print '    step 2 took ' + str(time.clock() - c) + ' seconds'
+      # sort by relevance:
+      scoredArtists = sorted(artistDict.iteritems(), key=lambda (k,v): (v,k))
 
-    for art, score in scoredArtists:
-      if score > 0:
+      #for name, score in scoredArtists:
+      #  print str(score) + " --> '" + name + "'"
+
+      c = time.clock() - c
+
+      for art, score in scoredArtists[-5:]:
         print str(score) + " ==> '" + art + "'"
         #print str(ratio) + " --> '" + out + "'"
 
@@ -202,8 +208,11 @@ def main():
     print 'in ' + str(c) + ' seconds'
     print str(len(artists_words)) + " words found"
 
+    # common words:
+    common_words = { "the", "for", "a", "of", "and" }
+
     #search_song_loop(songdb)
-    search_words_loop(artists_words)
+    search_words_loop(artists_words, songdb, common_words)
   else:
     print "Usage: " + sys.argv[0] + " csv_filename"
 
