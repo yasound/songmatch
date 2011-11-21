@@ -145,7 +145,7 @@ def search_song_loop(songdb):
     else:
       print "not result found\n\n"
 
-def search_words_loop(wordlist, songdb, common_words):
+def search_words_loop(wordlist, songdb):
   splitter = re.compile(r'([ \t])')
   while 1:
     artistname = raw_input("Enter artist name >  ")
@@ -160,7 +160,7 @@ def search_words_loop(wordlist, songdb, common_words):
 
       output = set()
       for word in words:
-        if ((word[0] != ' ') | (word[0] != '\t')) & (word not in common_words):
+        if ((word[0] != ' ') | (word[0] != '\t')):
           cc = time.clock()
           word_dm = metaphone.dm(word)
           for aword, source in wordlist.iteritems():
@@ -209,10 +209,13 @@ def main():
     print str(len(artists_words)) + " words found"
 
     # common words:
-    common_words = { "the", "for", "a", "of", "and" }
+    common_words = { "the", "for", "a", "of", 'and' }
+    for w in common_words:
+      if w in artists_words:
+        del artists_words[w]
 
     #search_song_loop(songdb)
-    search_words_loop(artists_words, songdb, common_words)
+    search_words_loop(artists_words, songdb)
   else:
     print "Usage: " + sys.argv[0] + " csv_filename"
 
