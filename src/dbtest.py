@@ -16,17 +16,24 @@ def main():
 		# conn.cursor will return a cursor object, you can use this cursor to perform queries
 		cursor = conn.cursor()
 
-		# execute our Query
-		cursor.execute("SELECT COUNT(name) FROM yasound_song")
-
-		# retrieve the records from the database
+		# execute our 1st Query
+		cursor.execute("SELECT COUNT(*) FROM yasound_song")
 		records = cursor.fetchall()
+		print str(records[0][0]) + " songs found"
 
-		# print out the records using pretty print
-		# note that the NAMES of the columns are not shown, instead just indexes.
-		# for most people this isn't very useful so we'll show you how to return
-		# columns as a dictionary (hash) in the next example.
-		pprint.pprint(records)
+		cursor.execute("SELECT COUNT(*) FROM yasound_artist")
+		records = cursor.fetchall()
+		print str(records[0][0]) + " artists found"
+
+		cursor.execute("SELECT COUNT(*) FROM yasound_album")
+		records = cursor.fetchall()
+		print str(records[0][0]) + " albums found"
+
+
+		# execute our 2nd Query
+		#cursor.execute("SELECT name FROM yasound_song")
+		records = cursor.fetchall()
+		print str(len(records)) + " records found"
 	except:
 		# Get the most recent exception
 		exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()

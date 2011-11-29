@@ -22,7 +22,6 @@ True
 
 import unicodedata
 
-
 def dm(st):
     """dm(string) -> (string, string or '')
     returns the double metaphone codes for given string - always a tuple
