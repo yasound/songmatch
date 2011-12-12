@@ -219,7 +219,7 @@ def main():
         print str(len(artists_words)) + " words found"
 
         # common words:
-        common_words = { "the", "for", "a", "of", 'and' }
+        common_words = [ "the", "for", "a", "of", 'and' ]
         for w in common_words:
             if w in artists_words:
                 del artists_words[w]
