@@ -6,7 +6,7 @@ import pprint
 def main():
     #start the script
 
-    conn_string = "host='yasound.com' port='5433' dbname='yasound' user='yasound' password='ufAHo10qAd0w'"
+    conn_string = "host='yasound.com' port='5433' dbname='yasound' user='yaapp' password='N3EDTnz945FSh6D'"
     # print the connection string we will use to connect
     print "Connecting to database\n	->%s" % (conn_string)
     try:
@@ -17,22 +17,27 @@ def main():
         cursor = conn.cursor()
 
         # execute our 1st Query
-        cursor.execute("SELECT COUNT(*) FROM yasound_song")
-        records = cursor.fetchall()
-        print str(records[0][0]) + " songs found"
+        if 0:
+            cursor.execute("SELECT COUNT(*) FROM yasound_song")
+            records = cursor.fetchall()
+            print str(records[0][0]) + " songs found"
 
-        cursor.execute("SELECT COUNT(*) FROM yasound_artist")
-        records = cursor.fetchall()
-        print str(records[0][0]) + " artists found"
+            cursor.execute("SELECT COUNT(*) FROM yasound_artist")
+            records = cursor.fetchall()
+            print str(records[0][0]) + " artists found"
 
-        cursor.execute("SELECT COUNT(*) FROM yasound_album")
-        records = cursor.fetchall()
-        print str(records[0][0]) + " albums found"
+            cursor.execute("SELECT COUNT(*) FROM yasound_album")
+            records = cursor.fetchall()
+            print str(records[0][0]) + " albums found"
 
 
-        # execute our 2nd Query
-        #cursor.execute("SELECT name FROM yasound_song")
+        # Fetch artist list:
+        cursor.execute("SELECT name, name_simplified FROM yasound_artist")
         records = cursor.fetchall()
+        f = open('data/artists.txt', 'w')
+        for a in records:
+            f.write(a[0] + ' , ' + a[1] + '\n')
+        f.close()
         print str(len(records)) + " records found"
     except:
         # Get the most recent exception

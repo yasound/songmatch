@@ -4,6 +4,9 @@ import sys
 import time
 import re
 import sets
+import psycopg2
+
+from stringindex import *
 
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
@@ -142,11 +145,11 @@ def search_song_loop(songdb):
     result = search_for_song_exact(songdb, artistname, albumname, songname)
 
     if result != None:
-      print "found '" + result[2] + "'"
-      print "by '" + result[0] + "'"
-      print "from album '" + result[1] + "'"
+        print "found '" + result[2] + "'"
+        print "by '" + result[0] + "'"
+        print "from album '" + result[1] + "'"
     else:
-      print "not result found\n\n"
+        print "not result found\n\n"
 
 def search_words_loop(wordlist, songdb):
     splitter = re.compile(r'([ \t])')
@@ -195,25 +198,18 @@ def search_words_loop(wordlist, songdb):
 
         print 'Search took ' + str(c) + ' seconds'
 
-######################################## Index Class:
-class Index:
-    """A class that implements fast fuzzy lookup of text for artist, song and album lists"""
-
-    def f(self):
-        return 'hello world'
-
-
-
 
 
 ################### Main:
 def main():
     if (len(sys.argv) > 1):
+        artists = StringIndex()
         print 'Loading csv'
         c = time.clock()
         songdb = read_csv(sys.argv[1])
         c = time.clock() - c
         print 'in ' + str(c) + ' seconds'
+
 
         print "building word list..."
         c = time.clock()
@@ -231,7 +227,43 @@ def main():
         #search_song_loop(songdb)
         search_words_loop(artists_words, songdb)
     else:
-      print "Usage: " + sys.argv[0] + " csv_filename"
+#         print "Usage: " + sys.argv[0] + " csv_filename"
+        conn_string = "host='yasound.com' port='5433' dbname='yasound' user='yaapp' password='N3EDTnz945FSh6D'"
+        # print the connection string we will use to connect
+        print "Connecting to database\n	->%s" % (conn_string)
+        try:
+            # get a connection, if a connect cannot be made an exception will be raised here
+            conn = psycopg2.connect(conn_string)
+
+            # conn.cursor will return a cursor object, you can use this cursor to perform queries
+            cursor = conn.cursor()
+
+            # Fetch artist list:
+            cursor.execute("SELECT name, name_simplified FROM yasound_artist")
+            records = cursor.fetchall()
+            artists = StringIndex()
+            for row in records:
+                name = row[0]
+                name_simplified = row[1]
+                #print name_simplified
+                artists.add(name_simplified)
+
+            common_words = { "the", "for", "a", "of", 'and' }
+            artists.set_common_words(common_words)
+            print str(len(artists)) + " artists found"
+
+            sel = ['the cure', 'dire strait', 'teh cure', 'lloyd cole and the commotion', 'direstraits']
+            for artist in sel:
+                if artist == None:
+                    print artist + 'not found'
+                else:
+                    print artist + ' ==> ' + artists[artist]
+        except:
+            # Get the most recent exception
+            exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+            # Exit the script and print an error telling what happened.
+            sys.exit("Database connection failed!\n ->%s" % (exceptionValue))
+
 
 
 if __name__ == '__main__':
